@@ -1,16 +1,23 @@
 extends Area2D
 
+var lifetime: float = 15.0  # Bug 11 fix: despawn after 15 seconds
+
 func _ready() -> void:
 	body_entered.connect(_on_body_entered)
 
+func _process(delta: float) -> void:
+	lifetime -= delta
+	if lifetime < 3.0:
+		modulate.a = lifetime / 3.0
+	if lifetime <= 0.0:
+		queue_free()
+
 func _draw() -> void:
-	# Blue translucent puddle
 	var points := PackedVector2Array()
 	for i in range(20):
 		var angle := i * TAU / 20.0
 		points.append(Vector2(cos(angle) * 28.0, sin(angle) * 16.0))
 	draw_colored_polygon(points, Color(0.4, 0.65, 1.0, 0.25))
-	# Inner highlight
 	var inner := PackedVector2Array()
 	for i in range(12):
 		var angle := i * TAU / 12.0

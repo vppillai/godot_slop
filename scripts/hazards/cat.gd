@@ -5,6 +5,7 @@ const LUNGE_SPEED: float = 400.0
 const LUNGE_RANGE: float = 120.0
 const DIRECTION_CHANGE_TIME: float = 2.0
 const WARNING_DURATION: float = 0.35
+const MAX_LIFETIME: float = 15.0  # Bug 33 fix: cats don't linger forever
 
 enum State { WANDER, WARNING, LUNGE }
 
@@ -16,16 +17,25 @@ var lunge_timer: float = 0.0
 var warning_timer: float = 0.0
 var warning_target: Vector2 = Vector2.ZERO
 var player_ref: CharacterBody2D = null
+var lifetime: float = 0.0
 
 func _ready() -> void:
 	body_entered.connect(_on_body_entered)
-	direction = Vector2(randf_range(-1, 1), randf_range(-1, 1)).normalized()
 	dir_timer = DIRECTION_CHANGE_TIME
 
+# Bug 9 fix: initial direction points toward center of play area
 func setup(player: CharacterBody2D) -> void:
 	player_ref = player
+	var center := Vector2(640, 360)
+	direction = (center - position).normalized()
+	# Add some randomness
+	direction = direction.rotated(randf_range(-0.5, 0.5))
 
 func _physics_process(delta: float) -> void:
+	lifetime += delta
+	if lifetime >= MAX_LIFETIME:
+		queue_free()
+		return
 	match state:
 		State.WANDER:
 			_process_wander(delta)

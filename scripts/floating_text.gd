@@ -14,5 +14,6 @@ func _draw() -> void:
 	var font := ThemeDB.fallback_font
 	if font == null:
 		return
-	draw_string_outline(font, Vector2(-60, 0), text, HORIZONTAL_ALIGNMENT_CENTER, 120, 22, 4, Color.BLACK)
-	draw_string(font, Vector2(-60, 0), text, HORIZONTAL_ALIGNMENT_CENTER, 120, 22, color)
+	# Bug 24 fix: wider text box so "NOT THE ROOMBA!" isn't clipped
+	draw_string_outline(font, Vector2(-150, 0), text, HORIZONTAL_ALIGNMENT_CENTER, 300, 22, 4, Color.BLACK)
+	draw_string(font, Vector2(-150, 0), text, HORIZONTAL_ALIGNMENT_CENTER, 300, 22, color)

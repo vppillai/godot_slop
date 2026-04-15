@@ -14,14 +14,14 @@ var furniture_scene: PackedScene = preload("res://scenes/hazards/furniture.tscn"
 var roomba_scene: PackedScene = preload("res://scenes/hazards/roomba.tscn")
 var droplet_scene: PackedScene = preload("res://scenes/hazards/water_droplet.tscn")
 var puddle_scene: PackedScene = preload("res://scenes/hazards/puddle.tscn")
-var floating_text_script: GDScript = preload("res://scripts/floating_text.gd")
+var _floating_text_script = preload("res://scripts/floating_text.gd")
 
 var cat_spawn_interval: float = 3.0
 var cat_spawn_timer: float = 2.0
 var shoe_spawn_interval: float = 1.5
-var shoe_spawn_timer: float = 0.0
+var shoe_spawn_timer: float = 1.5  # Bug 16 fix: grace period before first shoe
 var furniture_spawn_interval: float = 4.0
-var furniture_spawn_timer: float = 0.0
+var furniture_spawn_timer: float = 4.0  # Bug 16 fix: grace period before first furniture
 var roomba_spawned: bool = false
 var second_roomba_spawned: bool = false
 var droplet_spawn_interval: float = 8.0
@@ -43,6 +43,7 @@ func _process(delta: float) -> void:
 	if time_remaining <= 0.0:
 		time_remaining = 0.0
 		_win()
+		return  # Bug 3 fix: don't continue processing after win
 	hud.update_timer(time_remaining)
 	hud.update_hp(player.hp)
 	_spawn_hazards(delta)
@@ -73,16 +74,12 @@ func _spawn_hazards(delta: float) -> void:
 	if elapsed >= 45.0 and not roomba_spawned:
 		_spawn_roomba()
 		roomba_spawned = true
-		_spawn_floating_text_at(
-			Vector2(640, 300), "NOT THE ROOMBA!", Color(1, 0.2, 0.2)
-		)
+		_spawn_floating_text_at(player.position + Vector2(0, -50), "NOT THE ROOMBA!", Color(1, 0.2, 0.2))
 
 	if elapsed >= 55.0 and not second_roomba_spawned:
 		_spawn_roomba()
 		second_roomba_spawned = true
-		_spawn_floating_text_at(
-			Vector2(640, 300), "ANOTHER ONE?!", Color(1, 0.1, 0.1)
-		)
+		_spawn_floating_text_at(player.position + Vector2(0, -50), "ANOTHER ONE?!", Color(1, 0.1, 0.1))
 
 func _spawn_pickups(delta: float) -> void:
 	droplet_spawn_timer -= delta
@@ -102,10 +99,11 @@ func _update_atmosphere() -> void:
 	# Floor gets redder over time
 	floor_rect.color = floor_start_color.lerp(floor_end_color, t)
 
-	# Camera slowly zooms in and tilts in the final stretch
-	camera.zoom = Vector2(1.0 + t * 0.08, 1.0 + t * 0.08)
+	# Bug 1 fix: gentler camera zoom so edges aren't an issue
+	camera.zoom = Vector2(1.0 + t * 0.04, 1.0 + t * 0.04)
+	# Bug 2 fix: very gentle tilt, floor is oversized so no gaps
 	if elapsed > 45.0:
-		camera.rotation = sin(Time.get_ticks_msec() * 0.003) * 0.015 * (t * 2.0)
+		camera.rotation = sin(Time.get_ticks_msec() * 0.003) * 0.01
 	else:
 		camera.rotation = 0.0
 
@@ -159,10 +157,10 @@ func _spawn_puddle() -> void:
 
 func _spawn_floating_text_at(pos: Vector2, text: String, color: Color) -> void:
 	var ft := Node2D.new()
-	ft.set_script(floating_text_script)
-	ft.position = pos
+	ft.set_script(_floating_text_script)
 	ft.text = text
 	ft.color = color
+	ft.position = pos
 	add_child(ft)
 
 func _random_edge_position() -> Vector2:
@@ -176,12 +174,26 @@ func _random_edge_position() -> Vector2:
 
 func _win() -> void:
 	game_active = false
+	# Bug 3 fix: make player invincible immediately so hazards can't kill on win frame
+	player.invincible = true
+	player.active = false
+	hud.update_timer(0.0)
+	hud.update_hp(player.hp)
 	player.victory_dance()
 	hud.show_win()
+	_stop_all_hazards()
 
 func _on_player_died() -> void:
 	game_active = false
 	hud.show_lose()
+	_stop_all_hazards()
+
+# Bug 10 fix: stop all hazards from processing after game ends
+func _stop_all_hazards() -> void:
+	for child in get_children():
+		if child is Area2D:
+			child.set_physics_process(false)
+			child.set_process(false)
 
 func restart() -> void:
 	get_tree().reload_current_scene()

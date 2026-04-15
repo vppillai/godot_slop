@@ -16,7 +16,8 @@ func _ready() -> void:
 	restart_button.pressed.connect(_on_restart_pressed)
 
 func update_timer(time_remaining: float) -> void:
-	var seconds := ceili(time_remaining)
+	# Bug 12 fix: show 0 when time is up, not jump from 1
+	var seconds := maxi(ceili(time_remaining), 0)
 	timer_label.text = str(seconds)
 
 	if seconds <= 5:
