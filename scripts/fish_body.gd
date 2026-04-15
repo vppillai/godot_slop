@@ -1,8 +1,20 @@
 extends Node2D
 
+var time: float = 0.0
+
+func _process(delta: float) -> void:
+	time += delta
+	var parent := get_parent() as CharacterBody2D
+	if parent and parent.velocity.length() > 10.0:
+		# Wiggle while moving
+		scale.y = 1.0 + sin(time * 15.0) * 0.15
+		scale.x = 1.0 - sin(time * 15.0) * 0.05
+	else:
+		scale.y = lerpf(scale.y, 1.0, delta * 5.0)
+		scale.x = lerpf(scale.x, 1.0, delta * 5.0)
+
 func _draw() -> void:
 	# Fish body (orange ellipse)
-	var body_color := modulate
 	var points := PackedVector2Array()
 	for i in range(24):
 		var angle := i * TAU / 24.0

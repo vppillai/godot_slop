@@ -16,6 +16,9 @@ color = Color(0.82, 0.71, 0.55, 1)
 [node name="FloorLines" type="Node2D" parent="."]
 script = ExtResource("4_floor")
 
+[node name="Camera" type="Camera2D" parent="."]
+position = Vector2(640, 360)
+
 [node name="Player" parent="." instance=ExtResource("2_player")]
 position = Vector2(640, 360)
 

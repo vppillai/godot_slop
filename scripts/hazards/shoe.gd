@@ -9,10 +9,10 @@ func _ready() -> void:
 
 func setup(dir: Vector2) -> void:
 	direction = dir.normalized()
-	rotation = direction.angle()
 
 func _physics_process(delta: float) -> void:
 	position += direction * SPEED * delta
+	rotation += 10.0 * delta  # Tumble spin
 	if position.x < -80 or position.x > 1360 or position.y < -80 or position.y > 800:
 		queue_free()
 

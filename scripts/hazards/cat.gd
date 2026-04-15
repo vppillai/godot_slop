@@ -4,12 +4,17 @@ const SPEED: float = 150.0
 const LUNGE_SPEED: float = 400.0
 const LUNGE_RANGE: float = 120.0
 const DIRECTION_CHANGE_TIME: float = 2.0
+const WARNING_DURATION: float = 0.35
 
+enum State { WANDER, WARNING, LUNGE }
+
+var state: State = State.WANDER
 var direction: Vector2 = Vector2.RIGHT
 var dir_timer: float = 0.0
-var lunging: bool = false
 var lunge_dir: Vector2 = Vector2.ZERO
 var lunge_timer: float = 0.0
+var warning_timer: float = 0.0
+var warning_target: Vector2 = Vector2.ZERO
 var player_ref: CharacterBody2D = null
 
 func _ready() -> void:
@@ -21,11 +26,14 @@ func setup(player: CharacterBody2D) -> void:
 	player_ref = player
 
 func _physics_process(delta: float) -> void:
-	if lunging:
-		_process_lunge(delta)
-		return
-	_process_wander(delta)
-	_check_lunge()
+	match state:
+		State.WANDER:
+			_process_wander(delta)
+			_check_lunge()
+		State.WARNING:
+			_process_warning(delta)
+		State.LUNGE:
+			_process_lunge(delta)
 	_cleanup_if_offscreen()
 
 func _process_wander(delta: float) -> void:
@@ -40,16 +48,32 @@ func _check_lunge() -> void:
 		return
 	var dist := position.distance_to(player_ref.position)
 	if dist < LUNGE_RANGE:
-		lunging = true
-		lunge_dir = (player_ref.position - position).normalized()
+		state = State.WARNING
+		warning_timer = WARNING_DURATION
+		warning_target = player_ref.position
+		queue_redraw()
+
+func _process_warning(delta: float) -> void:
+	warning_timer -= delta
+	queue_redraw()
+	if warning_timer <= 0.0:
+		state = State.LUNGE
+		lunge_dir = (warning_target - position).normalized()
 		lunge_timer = 0.3
+		queue_redraw()
 
 func _process_lunge(delta: float) -> void:
 	position += lunge_dir * LUNGE_SPEED * delta
 	lunge_timer -= delta
 	if lunge_timer <= 0.0:
-		lunging = false
+		state = State.WANDER
 		dir_timer = DIRECTION_CHANGE_TIME
+		queue_redraw()
+
+func _draw() -> void:
+	if state == State.WARNING:
+		var alpha := 0.12 + sin(warning_timer * 20.0) * 0.06
+		draw_circle(Vector2.ZERO, LUNGE_RANGE, Color(1, 0, 0, alpha))
 
 func _cleanup_if_offscreen() -> void:
 	if position.x < -100 or position.x > 1380 or position.y < -100 or position.y > 820:
