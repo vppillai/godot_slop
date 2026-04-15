@@ -15,4 +15,4 @@ shape = SubResource("CircleShape2D_fish")
 
 [node name="Body" type="Polygon2D" parent="."]
 color = Color(1, 0.6, 0.1, 1)
-polygon = PackedVector2Array(-20, -10, -10, -16, 10, -14, 20, -6, 22, 0, 20, 6, 10, 14, -10, 16, -20, 10, -30, -12, -36, 0, -30, 12, -20, 10)
+polygon = PackedVector2Array(-36, 0, -24, -12, -12, -16, 0, -14, 14, -8, 22, 0, 14, 8, 0, 14, -12, 16, -24, 12)
