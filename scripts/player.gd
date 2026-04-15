@@ -17,9 +17,10 @@ var flash_timer: float = 0.0
 var trail_timer: float = 0.0
 var speed_boost_timer: float = 0.0
 var active: bool = true
+var facing_right: bool = true
 
-var trail_drop_script: GDScript = preload("res://scripts/trail_drop.gd")
-var floating_text_script: GDScript = preload("res://scripts/floating_text.gd")
+var _trail_drop_script = preload("res://scripts/trail_drop.gd")
+var _floating_text_script = preload("res://scripts/floating_text.gd")
 
 var hit_messages: Array[String] = ["YIKES!", "OH NO!", "OUCH!", "EEK!", "SPLAT!", "ACK!"]
 
@@ -44,11 +45,13 @@ func _handle_movement(delta: float) -> void:
 		input_dir = input_dir.normalized()
 	velocity = input_dir * _get_current_speed()
 	move_and_slide()
-	if input_dir.x < 0:
+	# Flip fish direction — set scale.x directly (fish_body only touches scale.y)
+	if input_dir.x < 0 and facing_right:
+		facing_right = false
 		$Body.scale.x = -abs($Body.scale.x)
-	elif input_dir.x > 0:
+	elif input_dir.x > 0 and not facing_right:
+		facing_right = true
 		$Body.scale.x = abs($Body.scale.x)
-	# Speed boost countdown
 	if speed_boost_timer > 0.0:
 		speed_boost_timer -= delta
 
@@ -71,7 +74,7 @@ func _handle_trail(delta: float) -> void:
 	if trail_timer <= 0.0:
 		trail_timer = 0.06
 		var drop := Node2D.new()
-		drop.set_script(trail_drop_script)
+		drop.set_script(_trail_drop_script)
 		drop.position = position
 		get_parent().add_child(drop)
 
@@ -97,7 +100,6 @@ func take_hit() -> void:
 	invincible = true
 	invincible_timer = INVINCIBILITY_DURATION
 	flash_timer = 0.1
-	# Screen shake
 	var tween := get_tree().create_tween()
 	var original_pos := position
 	for i in range(6):
@@ -121,10 +123,13 @@ func apply_speed_boost() -> void:
 func victory_dance() -> void:
 	active = false
 	velocity = Vector2.ZERO
+	# Stop fish_body wiggle so tween has full control
+	$Body.wiggle_enabled = false
+	$Body.scale = Vector2(1.0, 1.0)
 	var tween := create_tween()
 	tween.tween_property($Body, "rotation", TAU * 3, 1.5).set_ease(Tween.EASE_IN_OUT)
-	tween.parallel().tween_property($Body, "scale", Vector2(1.4, 1.4), 0.8)
-	tween.parallel().tween_property($Body, "scale", Vector2(1.0, 1.0), 0.7).set_delay(0.8)
+	tween.parallel().tween_property($Body, "scale", Vector2(1.4, 1.4), 0.8).set_ease(Tween.EASE_OUT)
+	tween.tween_property($Body, "scale", Vector2(1.0, 1.0), 0.7).set_ease(Tween.EASE_IN)
 
 func _update_appearance() -> void:
 	match hp:
@@ -140,7 +145,6 @@ func _update_appearance() -> void:
 func _spawn_hit_particles() -> void:
 	var particles := CPUParticles2D.new()
 	particles.position = position
-	particles.emitting = true
 	particles.one_shot = true
 	particles.explosiveness = 1.0
 	particles.amount = 12
@@ -155,12 +159,14 @@ func _spawn_hit_particles() -> void:
 	particles.scale_amount_max = 5.0
 	particles.color = Color(0.4, 0.6, 1.0, 0.8)
 	get_parent().add_child(particles)
+	# Start emitting AFTER added to tree
+	particles.emitting = true
 	get_tree().create_tween().tween_callback(particles.queue_free).set_delay(1.5)
 
 func _spawn_floating_text(msg: String, col: Color) -> void:
 	var ft := Node2D.new()
-	ft.set_script(floating_text_script)
-	ft.position = position + Vector2(0, -30)
+	ft.set_script(_floating_text_script)
 	ft.text = msg
 	ft.color = col
+	ft.position = position + Vector2(0, -30)
 	get_parent().add_child(ft)
