@@ -372,6 +372,7 @@ func _win() -> void:
 
 func _on_player_died() -> void:
 	state = GameState.LOST
+	hud.update_hp(player.hp)  # Show 0 hearts on death
 	var survival_time := 60.0 - time_remaining
 	hud.show_lose(survival_time)
 	_stop_all_hazards()
