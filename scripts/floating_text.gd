@@ -1,3 +1,10 @@
+# Floating text — rises, fades, and scales up over 1.2s then self-destructs.
+# Used for hit reactions ("YIKES!"), pickups ("PHEW!", "ZOOM!"), near-miss ("CLOSE!"),
+# and hazard announcements ("NOT THE ROOMBA!").
+#
+# Usage: create a Node2D, set_script to this, set .text and .color, add to tree.
+# The tween starts automatically in _ready().
+
 extends Node2D
 
 var text: String = ""
@@ -14,6 +21,6 @@ func _draw() -> void:
 	var font := ThemeDB.fallback_font
 	if font == null:
 		return
-	# Bug 24 fix: wider text box so "NOT THE ROOMBA!" isn't clipped
+	# 300px wide centered text box to fit long messages like "NOT THE ROOMBA!"
 	draw_string_outline(font, Vector2(-150, 0), text, HORIZONTAL_ALIGNMENT_CENTER, 300, 22, 4, Color.BLACK)
 	draw_string(font, Vector2(-150, 0), text, HORIZONTAL_ALIGNMENT_CENTER, 300, 22, color)

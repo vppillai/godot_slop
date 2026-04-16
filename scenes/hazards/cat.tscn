@@ -12,15 +12,3 @@ script = ExtResource("1_cat")
 
 [node name="CollisionShape2D" type="CollisionShape2D" parent="."]
 shape = SubResource("CircleShape2D_cat")
-
-[node name="Body" type="Polygon2D" parent="."]
-color = Color(0.3, 0.3, 0.35, 1)
-polygon = PackedVector2Array(-24, -10, -18, -26, -10, -16, 10, -16, 18, -26, 24, -10, 24, 16, 0, 24, -24, 16)
-
-[node name="EyeL" type="Polygon2D" parent="."]
-color = Color(1, 1, 0, 1)
-polygon = PackedVector2Array(-10, -6, -6, -6, -6, -2, -10, -2)
-
-[node name="EyeR" type="Polygon2D" parent="."]
-color = Color(1, 1, 0, 1)
-polygon = PackedVector2Array(6, -6, 10, -6, 10, -2, 6, -2)

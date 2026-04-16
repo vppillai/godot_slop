@@ -1,6 +1,8 @@
-[gd_scene load_steps=2 format=3]
+[gd_scene load_steps=4 format=3]
 
 [ext_resource type="Script" path="res://scripts/hud.gd" id="1_hud"]
+[ext_resource type="Script" path="res://scripts/heart_display.gd" id="2_heart"]
+[ext_resource type="Script" path="res://scripts/virtual_joystick.gd" id="3_joystick"]
 
 [node name="HUD" type="CanvasLayer"]
 script = ExtResource("1_hud")
@@ -12,17 +14,9 @@ offset_bottom = 70.0
 grow_horizontal = 2
 color = Color(0, 0, 0, 0.4)
 
-[node name="HPLabel" type="Label" parent="."]
-anchors_preset = 0
-offset_left = 20.0
-offset_top = 12.0
-offset_right = 300.0
-offset_bottom = 52.0
-theme_override_colors/font_color = Color(1, 0.3, 0.3, 1)
-theme_override_colors/font_outline_color = Color(0, 0, 0, 1)
-theme_override_constants/outline_size = 4
-theme_override_font_sizes/font_size = 28
-text = "<3 <3 <3"
+[node name="HeartDisplay" type="Node2D" parent="."]
+position = Vector2(30, 32)
+script = ExtResource("2_heart")
 
 [node name="TimerLabel" type="Label" parent="."]
 anchors_preset = 5
@@ -55,6 +49,91 @@ theme_override_constants/outline_size = 3
 theme_override_font_sizes/font_size = 24
 horizontal_alignment = 1
 text = ""
+
+[node name="WaveLabel" type="Label" parent="."]
+anchors_preset = 5
+anchor_left = 0.5
+anchor_right = 0.5
+offset_left = -200.0
+offset_top = 130.0
+offset_right = 200.0
+offset_bottom = 170.0
+grow_horizontal = 2
+theme_override_colors/font_color = Color(1, 0.8, 0.2, 1)
+theme_override_colors/font_outline_color = Color(0, 0, 0, 1)
+theme_override_constants/outline_size = 4
+theme_override_font_sizes/font_size = 28
+horizontal_alignment = 1
+text = ""
+
+[node name="DamageFlash" type="ColorRect" parent="."]
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+mouse_filter = 2
+color = Color(1, 0, 0, 0)
+
+[node name="TitleOverlay" type="ColorRect" parent="."]
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+mouse_filter = 2
+color = Color(0, 0, 0, 0.6)
+
+[node name="GameTitle" type="Label" parent="TitleOverlay"]
+layout_mode = 1
+anchors_preset = 5
+anchor_left = 0.5
+anchor_right = 0.5
+offset_left = -300.0
+offset_top = 150.0
+offset_right = 300.0
+offset_bottom = 220.0
+grow_horizontal = 2
+theme_override_colors/font_color = Color(1, 0.55, 0, 1)
+theme_override_colors/font_outline_color = Color(0, 0, 0, 1)
+theme_override_constants/outline_size = 6
+theme_override_font_sizes/font_size = 52
+horizontal_alignment = 1
+text = "FISH OUT OF WATER"
+
+[node name="StartPrompt" type="Label" parent="TitleOverlay"]
+layout_mode = 1
+anchors_preset = 5
+anchor_left = 0.5
+anchor_right = 0.5
+offset_left = -200.0
+offset_top = 340.0
+offset_right = 200.0
+offset_bottom = 380.0
+grow_horizontal = 2
+theme_override_colors/font_color = Color(1, 1, 1, 1)
+theme_override_colors/font_outline_color = Color(0, 0, 0, 1)
+theme_override_constants/outline_size = 3
+theme_override_font_sizes/font_size = 24
+horizontal_alignment = 1
+text = "Press any key to start"
+
+[node name="Instructions" type="Label" parent="TitleOverlay"]
+layout_mode = 1
+anchors_preset = 5
+anchor_left = 0.5
+anchor_right = 0.5
+offset_left = -300.0
+offset_top = 400.0
+offset_right = 300.0
+offset_bottom = 440.0
+grow_horizontal = 2
+theme_override_colors/font_color = Color(0.7, 0.7, 0.7, 1)
+theme_override_colors/font_outline_color = Color(0, 0, 0, 1)
+theme_override_constants/outline_size = 2
+theme_override_font_sizes/font_size = 18
+horizontal_alignment = 1
+text = "WASD / Arrow keys to move | Survive 60 seconds"
 
 [node name="EndPanel" type="Panel" parent="."]
 anchors_preset = 8
@@ -89,9 +168,9 @@ anchors_preset = 5
 anchor_left = 0.5
 anchor_right = 0.5
 offset_left = -180.0
-offset_top = 80.0
+offset_top = 70.0
 offset_right = 180.0
-offset_bottom = 130.0
+offset_bottom = 140.0
 grow_horizontal = 2
 theme_override_font_sizes/font_size = 18
 horizontal_alignment = 1
@@ -105,10 +184,32 @@ anchor_left = 0.5
 anchor_top = 1.0
 anchor_right = 0.5
 anchor_bottom = 1.0
-offset_left = -80.0
+offset_left = -100.0
 offset_top = -60.0
-offset_right = 80.0
-offset_bottom = -20.0
+offset_right = 100.0
+offset_bottom = -16.0
 grow_horizontal = 2
 grow_vertical = 0
+theme_override_font_sizes/font_size = 20
 text = "Play Again"
+
+[node name="FadeOverlay" type="ColorRect" parent="."]
+z_index = 100
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+mouse_filter = 2
+color = Color(0, 0, 0, 1)
+
+[node name="VirtualJoystick" type="Control" parent="."]
+anchors_preset = 2
+anchor_top = 1.0
+anchor_bottom = 1.0
+offset_left = 20.0
+offset_top = -200.0
+offset_right = 200.0
+offset_bottom = -20.0
+grow_vertical = 0
+script = ExtResource("3_joystick")
