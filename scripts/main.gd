@@ -272,7 +272,7 @@ func _check_near_miss(delta: float) -> void:
 	_near_miss_cooldown -= delta
 	if _near_miss_cooldown > 0.0:
 		return
-	if not player.active:
+	if not player.active or player.invincible:
 		return
 	# Check center-to-center distance to all hazards (collision_layer 2)
 	for child in get_children():
@@ -364,6 +364,7 @@ func _win() -> void:
 	player.invincible = true  # Prevent death on the same frame as win
 	player.active = false
 	hud.update_timer(0.0)
+	hud.reset_timer_style()  # Clear jitter/pulse so timer shows clean "0" on win screen
 	hud.update_hp(player.hp)
 	player.victory_dance()
 	var survival_time := 60.0 - time_remaining
@@ -373,6 +374,7 @@ func _win() -> void:
 func _on_player_died() -> void:
 	state = GameState.LOST
 	hud.update_hp(player.hp)  # Show 0 hearts on death
+	hud.reset_timer_style()   # Clear jitter/pulse so timer shows clean on end screen
 	var survival_time := 60.0 - time_remaining
 	hud.show_lose(survival_time)
 	_stop_all_hazards()

@@ -111,12 +111,15 @@ func update_timer(time_remaining: float) -> void:
 		flavor_label.text = ""
 		_reset_timer_style()
 
+## Resets timer font size, color, and position to default (called externally on win).
+func reset_timer_style() -> void:
+	_reset_timer_style()
+
 func _reset_timer_style() -> void:
 	timer_label.add_theme_font_size_override("font_size", 36)
 	timer_label.add_theme_color_override("font_color", Color(1, 1, 1))
 	_reset_timer_offsets()
 
-## Restores TimerLabel offsets to match the values in hud.tscn.
 func _reset_timer_offsets() -> void:
 	timer_label.offset_left = -60
 	timer_label.offset_right = 60
