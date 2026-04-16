@@ -50,6 +50,28 @@ Requires [Godot 4.6+](https://godotengine.org/download).
 /path/to/godot --headless --export-release "Web" build/web/index.html
 ```
 
+## Updating Screenshots
+
+Requires Node.js, Google Chrome, and ffmpeg.
+
+```bash
+# Install puppeteer (one-time)
+npm install puppeteer-core
+
+# Capture title screen, gameplay screenshot, and GIF frames
+node docs/capture_screenshots.mjs
+
+# Build GIF from frames
+ffmpeg -y -framerate 10 -i docs/screenshots/frame_%04d.png \
+  -vf "fps=10,scale=640:-1:flags=lanczos,split[s0][s1];[s0]palettegen=max_colors=128[p];[s1][p]paletteuse=dither=bayer" \
+  docs/screenshots/gameplay.gif
+
+# Clean up frames
+rm docs/screenshots/frame_*.png
+```
+
+Edit `CHROME_PATH` in the script if Chrome is installed in a non-default location.
+
 ## License
 
 Do whatever you want with it. It's slop.
