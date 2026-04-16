@@ -140,10 +140,11 @@ func _start_game() -> void:
 	player.flash_timer = 0.1
 	hud.hide_title()
 	hud.fade_from_black()
-	# Show virtual joystick on touch devices
+	# Show virtual joystick + swap button on touch devices
 	var joystick = hud.get_node_or_null("VirtualJoystick")
 	if joystick and DisplayServer.is_touchscreen_available():
 		joystick.visible = true
+		hud.show_swap_button()
 	hud.show_wave_announcement("CATS!", Color(1.0, 0.8, 0.2))
 
 

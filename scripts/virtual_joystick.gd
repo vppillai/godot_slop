@@ -1,28 +1,30 @@
 # VirtualJoystick — on-screen touch joystick for mobile input.
 #
-# Starts hidden. main.gd shows it on game start if DisplayServer.is_touchscreen_available().
-# Positioned at bottom-left of screen via anchors in hud.tscn.
+# Starts hidden. main.gd shows it on game start if touchscreen is available.
+# Can be swapped between left and right sides for left/right-hand players
+# via swap_side(). Positioned via anchors so it adapts to any screen size.
 #
 # Input flow:
-#   _gui_input receives InputEventScreenTouch/Drag -> updates _knob_pos (normalized -1..1)
+#   _gui_input receives InputEventScreenTouch/Drag -> updates _knob_pos
 #   player.gd polls get_direction() every physics frame
-#
-# Visual: outer ring (80px radius, semi-transparent) + inner knob (30px, follows touch).
-# The knob position is clamped to the ring radius.
 
 extends Control
 
 const OUTER_RADIUS: float = 80.0
 const INNER_RADIUS: float = 30.0
+const JOYSTICK_SIZE: float = 180.0  # Width/height of the control
+const MARGIN: float = 20.0         # Distance from screen edges
 
 var _touching: bool = false
-var _touch_index: int = -1        # Tracks which finger is on the joystick
+var _touch_index: int = -1
 var _knob_pos: Vector2 = Vector2.ZERO  # Normalized direction (-1..1 per axis)
+var _on_right_side: bool = false       # false = left side (default)
 
 func _ready() -> void:
-	visible = false  # Shown by main.gd on game start (touch devices only)
+	visible = false
 	mouse_filter = Control.MOUSE_FILTER_STOP
-	custom_minimum_size = Vector2(OUTER_RADIUS * 2 + 20, OUTER_RADIUS * 2 + 20)
+	custom_minimum_size = Vector2(JOYSTICK_SIZE, JOYSTICK_SIZE)
+	_apply_side()
 
 ## Returns the normalized direction the player is pushing, or Vector2.ZERO if idle.
 func get_direction() -> Vector2:
@@ -31,6 +33,33 @@ func get_direction() -> Vector2:
 	if _knob_pos.length() > 0.1:
 		return _knob_pos.normalized()
 	return Vector2.ZERO
+
+## Toggles the joystick between left and right sides of the screen.
+func swap_side() -> void:
+	_on_right_side = not _on_right_side
+	_apply_side()
+
+func _apply_side() -> void:
+	if _on_right_side:
+		# Bottom-right: anchor to bottom-right corner
+		anchor_left = 1.0
+		anchor_right = 1.0
+		anchor_top = 1.0
+		anchor_bottom = 1.0
+		offset_left = -JOYSTICK_SIZE - MARGIN
+		offset_top = -JOYSTICK_SIZE - MARGIN
+		offset_right = -MARGIN
+		offset_bottom = -MARGIN
+	else:
+		# Bottom-left: anchor to bottom-left corner
+		anchor_left = 0.0
+		anchor_right = 0.0
+		anchor_top = 1.0
+		anchor_bottom = 1.0
+		offset_left = MARGIN
+		offset_top = -JOYSTICK_SIZE - MARGIN
+		offset_right = JOYSTICK_SIZE + MARGIN
+		offset_bottom = -MARGIN
 
 func _gui_input(event: InputEvent) -> void:
 	if event is InputEventScreenTouch:
@@ -51,14 +80,16 @@ func _update_knob(touch_pos: Vector2) -> void:
 	var offset := touch_pos - center
 	if offset.length() > OUTER_RADIUS:
 		offset = offset.normalized() * OUTER_RADIUS
-	_knob_pos = offset / OUTER_RADIUS  # Normalize to -1..1 range
+	_knob_pos = offset / OUTER_RADIUS
 	queue_redraw()
 
 func _draw() -> void:
 	if not visible:
 		return
 	var center := size / 2.0
+	# Outer ring
 	_draw_ring(center, OUTER_RADIUS, Color(1, 1, 1, 0.15))
+	# Inner knob (follows touch)
 	var knob_draw_pos := center + _knob_pos * OUTER_RADIUS
 	_draw_filled_circle(knob_draw_pos, INNER_RADIUS, Color(1, 1, 1, 0.3))
 

@@ -1,6 +1,7 @@
 # HUD — manages all UI overlays: title screen, timer with pulse effects,
-# heart display, wave announcements, damage flash, end panels, and fade
-# transitions. All elements live on a CanvasLayer for screen-space rendering.
+# heart display, wave announcements, damage flash, end panels, fade
+# transitions, portrait-mode warning, and joystick hand-swap button.
+# All elements live on a CanvasLayer for screen-space rendering.
 
 extends CanvasLayer
 
@@ -20,31 +21,49 @@ signal restart_pressed
 @onready var wave_label: Label = $WaveLabel
 @onready var damage_flash: ColorRect = $DamageFlash
 @onready var fade_overlay: ColorRect = $FadeOverlay
+@onready var portrait_warning: ColorRect = $PortraitWarning
+@onready var swap_hand_button: Button = $SwapHandButton
+@onready var virtual_joystick: Control = $VirtualJoystick
 
 var _timer_base_size: int = 36
 var _prompt_time: float = 0.0  # Drives start prompt alpha pulse
+var _is_touch_device: bool = false
 
 func _ready() -> void:
+	_is_touch_device = DisplayServer.is_touchscreen_available()
 	end_panel.visible = false
-	end_panel.scale = Vector2(0.5, 0.5)  # Start small for pop-in animation
+	end_panel.scale = Vector2(0.5, 0.5)
 	flavor_label.text = ""
 	restart_button.pressed.connect(_on_restart_pressed)
 	wave_label.text = ""
 	wave_label.modulate.a = 0.0
 	damage_flash.color = Color(1, 0, 0, 0)
-	# Scene always fades in from black on load (covers both fresh start and restart)
+	# Scene always fades in from black on load
 	fade_overlay.color = Color(0, 0, 0, 1)
 	fade_from_black()
-	# Adapt prompt text for input method
-	if DisplayServer.is_touchscreen_available():
+	# Portrait warning starts hidden (checked every frame)
+	portrait_warning.visible = false
+	# Swap hand button — only visible on touch devices, starts hidden
+	swap_hand_button.visible = false
+	swap_hand_button.pressed.connect(_on_swap_hand_pressed)
+	# Adapt UI for input method
+	if _is_touch_device:
 		start_prompt.text = "Tap to start"
+		instructions_label.text = "Use joystick to move | Survive 60 seconds"
 	else:
 		start_prompt.text = "Press any key to start"
+		instructions_label.text = "WASD / Arrow keys to move | Survive 60 seconds"
 
 func _process(delta: float) -> void:
+	# Pulse start prompt alpha on title screen
 	if title_overlay.visible:
 		_prompt_time += delta
 		start_prompt.modulate.a = 0.5 + sin(_prompt_time * 3.0) * 0.5
+	# Portrait orientation detection — check actual window size, not viewport
+	# (viewport is always 1280x720 due to stretch mode "keep")
+	if _is_touch_device:
+		var win_size := DisplayServer.window_get_size()
+		portrait_warning.visible = win_size.x < win_size.y
 
 
 # =============================================================================
@@ -123,6 +142,44 @@ func hide_title() -> void:
 	var tween := create_tween()
 	tween.tween_property(title_overlay, "modulate:a", 0.0, 0.5)
 	tween.tween_callback(func(): title_overlay.visible = false)
+
+
+# =============================================================================
+# Joystick hand swap — moves joystick + button between left and right sides
+# =============================================================================
+
+## Shows the swap button (called from main.gd when gameplay starts on touch).
+func show_swap_button() -> void:
+	if _is_touch_device:
+		swap_hand_button.visible = true
+		_update_swap_button_position()
+
+func _on_swap_hand_pressed() -> void:
+	virtual_joystick.swap_side()
+	_update_swap_button_position()
+
+## Keeps the swap button positioned above the joystick on whichever side it's on.
+func _update_swap_button_position() -> void:
+	if virtual_joystick._on_right_side:
+		# Right side: button above joystick, right-aligned
+		swap_hand_button.anchor_left = 1.0
+		swap_hand_button.anchor_right = 1.0
+		swap_hand_button.anchor_top = 1.0
+		swap_hand_button.anchor_bottom = 1.0
+		swap_hand_button.offset_left = -170.0
+		swap_hand_button.offset_right = -50.0
+		swap_hand_button.offset_top = -230.0
+		swap_hand_button.offset_bottom = -205.0
+	else:
+		# Left side: button above joystick, left-aligned
+		swap_hand_button.anchor_left = 0.0
+		swap_hand_button.anchor_right = 0.0
+		swap_hand_button.anchor_top = 1.0
+		swap_hand_button.anchor_bottom = 1.0
+		swap_hand_button.offset_left = 50.0
+		swap_hand_button.offset_right = 170.0
+		swap_hand_button.offset_top = -230.0
+		swap_hand_button.offset_bottom = -205.0
 
 
 # =============================================================================
