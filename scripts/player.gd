@@ -26,6 +26,7 @@ var trail_timer: float = 0.0
 var speed_boost_timer: float = 0.0  # Remaining seconds of boost (from puddle pickup)
 var active: bool = true             # False during title screen and after death/win
 var facing_right: bool = true
+var autoplay: bool = false          # When true, main.gd drives movement (Konami cheat)
 
 var _trail_drop_script = preload("res://scripts/trail_drop.gd")
 var _floating_text_script = preload("res://scripts/floating_text.gd")
@@ -46,6 +47,11 @@ func _get_current_speed() -> float:
 	return SPEED
 
 func _handle_movement(delta: float) -> void:
+	if autoplay:
+		# Movement handled by main.gd _update_autoplay() during cheat mode
+		if speed_boost_timer > 0.0:
+			speed_boost_timer -= delta
+		return
 	var input_dir := Vector2.ZERO
 	# Prefer virtual joystick input on touch devices; fall back to keyboard
 	var joystick = get_node_or_null("/root/Main/HUD/VirtualJoystick")

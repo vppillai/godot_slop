@@ -65,6 +65,16 @@ var _shake_intensity: float = 0.0    # Camera shake pixel offset magnitude
 var _near_miss_cooldown: float = 0.0 # Prevents "CLOSE!" spam (2s between)
 var _title_tween: Tween = null       # Fish flop animation on title screen
 
+# --- Konami code cheat: Up Up Down Down Left Right Left Right B A ---
+const KONAMI_SEQUENCE: Array[int] = [
+	KEY_UP, KEY_UP, KEY_DOWN, KEY_DOWN,
+	KEY_LEFT, KEY_RIGHT, KEY_LEFT, KEY_RIGHT,
+	KEY_B, KEY_A,
+]
+var _konami_index: int = 0            # How far through the sequence the player is
+var _autoplay: bool = false           # When true, fish auto-dodges and is invincible
+var _autoplay_time: float = 0.0       # Drives the autopilot movement pattern
+
 
 # =============================================================================
 # Lifecycle
@@ -101,6 +111,8 @@ func _process(delta: float) -> void:
 	_update_atmosphere()
 	_update_screen_shake(delta)
 	_check_near_miss(delta)
+	if _autoplay:
+		_update_autoplay(delta)
 
 
 # =============================================================================
@@ -114,6 +126,15 @@ func _start_title_animation() -> void:
 	_title_tween.tween_property(player, "rotation", -0.15, 0.4).set_ease(Tween.EASE_IN_OUT).set_trans(Tween.TRANS_SINE)
 
 func _unhandled_input(event: InputEvent) -> void:
+	# Konami code detection during gameplay
+	if state == GameState.PLAYING and event is InputEventKey and event.pressed and not _autoplay:
+		if event.keycode == KONAMI_SEQUENCE[_konami_index]:
+			_konami_index += 1
+			if _konami_index >= KONAMI_SEQUENCE.size():
+				_activate_autoplay()
+		else:
+			_konami_index = 0
+
 	if state != GameState.TITLE:
 		return
 	var start := false
@@ -282,6 +303,50 @@ func _check_near_miss(delta: float) -> void:
 				_near_miss_cooldown = 2.0
 				_spawn_floating_text_at(player.position + Vector2(0, -40), "CLOSE!", Color(1, 1, 0))
 				break
+
+
+
+# =============================================================================
+# Konami code autoplay — makes fish invincible and auto-dodges to win
+# =============================================================================
+
+func _activate_autoplay() -> void:
+	_autoplay = true
+	_konami_index = 0
+	player.autoplay = true
+	player.invincible = true
+	player.invincible_timer = 999.0
+	player.flash_timer = 0.1
+	player.speed_boost_timer = 999.0
+	_spawn_floating_text_at(player.position + Vector2(0, -50), "GOD FISH ACTIVATED", Color(1, 0.8, 0))
+	hud.show_wave_announcement("GOD FISH MODE", Color(1, 0.8, 0))
+
+## Auto-pilots the fish in a figure-8 dodge pattern, avoiding edges.
+func _update_autoplay(delta: float) -> void:
+	_autoplay_time += delta
+	# Keep invincibility refreshed
+	player.invincible = true
+	player.invincible_timer = 2.0
+	player.speed_boost_timer = 2.0
+	# Figure-8 pattern centered on the play area
+	var cx := 640.0
+	var cy := 360.0
+	var rx := 400.0
+	var ry := 200.0
+	var speed := 1.8
+	var target_x := cx + cos(_autoplay_time * speed) * rx
+	var target_y := cy + sin(_autoplay_time * speed * 2.0) * ry
+	var target := Vector2(target_x, target_y)
+	var dir := (target - player.position).normalized()
+	player.velocity = dir * player.BOOST_SPEED
+	player.move_and_slide()
+	# Face movement direction
+	if dir.x < 0 and player.facing_right:
+		player.facing_right = false
+		player.get_node("Body").scale.x = -abs(player.get_node("Body").scale.x)
+	elif dir.x > 0 and not player.facing_right:
+		player.facing_right = true
+		player.get_node("Body").scale.x = abs(player.get_node("Body").scale.x)
 
 
 # =============================================================================
