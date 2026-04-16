@@ -59,11 +59,12 @@ func _process(delta: float) -> void:
 	if title_overlay.visible:
 		_prompt_time += delta
 		start_prompt.modulate.a = 0.5 + sin(_prompt_time * 3.0) * 0.5
-	# Portrait orientation detection — check actual window size, not viewport
-	# (viewport is always 1280x720 due to stretch mode "keep")
+	# Portrait orientation detection — use window size since it reflects
+	# the actual device orientation (viewport may be letterboxed)
 	if _is_touch_device:
 		var win_size := DisplayServer.window_get_size()
-		portrait_warning.visible = win_size.x < win_size.y
+		var is_portrait := win_size.x < win_size.y
+		portrait_warning.visible = is_portrait
 
 
 # =============================================================================
