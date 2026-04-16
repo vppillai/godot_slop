@@ -162,28 +162,29 @@ func _on_swap_hand_pressed() -> void:
 	virtual_joystick.swap_side()
 	_update_swap_button_position()
 
-## Keeps the swap button positioned above the joystick on whichever side it's on.
+## Places the swap button in the top corner OPPOSITE the joystick —
+## out of the play area so it can't be hit accidentally during gameplay.
 func _update_swap_button_position() -> void:
 	if virtual_joystick._on_right_side:
-		# Right side: button above joystick, right-aligned
-		swap_hand_button.anchor_left = 1.0
-		swap_hand_button.anchor_right = 1.0
-		swap_hand_button.anchor_top = 1.0
-		swap_hand_button.anchor_bottom = 1.0
-		swap_hand_button.offset_left = -170.0
-		swap_hand_button.offset_right = -50.0
-		swap_hand_button.offset_top = -230.0
-		swap_hand_button.offset_bottom = -205.0
-	else:
-		# Left side: button above joystick, left-aligned
+		# Joystick is bottom-right, so button goes top-left
 		swap_hand_button.anchor_left = 0.0
 		swap_hand_button.anchor_right = 0.0
-		swap_hand_button.anchor_top = 1.0
-		swap_hand_button.anchor_bottom = 1.0
-		swap_hand_button.offset_left = 50.0
-		swap_hand_button.offset_right = 170.0
-		swap_hand_button.offset_top = -230.0
-		swap_hand_button.offset_bottom = -205.0
+		swap_hand_button.anchor_top = 0.0
+		swap_hand_button.anchor_bottom = 0.0
+		swap_hand_button.offset_left = 20.0
+		swap_hand_button.offset_right = 140.0
+		swap_hand_button.offset_top = 78.0
+		swap_hand_button.offset_bottom = 103.0
+	else:
+		# Joystick is bottom-left, so button goes top-right
+		swap_hand_button.anchor_left = 1.0
+		swap_hand_button.anchor_right = 1.0
+		swap_hand_button.anchor_top = 0.0
+		swap_hand_button.anchor_bottom = 0.0
+		swap_hand_button.offset_left = -140.0
+		swap_hand_button.offset_right = -20.0
+		swap_hand_button.offset_top = 78.0
+		swap_hand_button.offset_bottom = 103.0
 
 
 # =============================================================================
